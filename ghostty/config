@@ -1,0 +1,67 @@
+# Ghostty Configuration
+# Terminal as rich as VSCode's integrated terminal
+
+# Font
+font-family = JetBrains Mono
+font-size = 14
+font-thicken = true
+adjust-cell-height = 20%
+
+# Theme — dark mode
+theme = Catppuccin Mocha
+background-opacity = 0.75
+background-blur-radius = 20
+minimum-contrast = 1.1
+
+# Window
+window-padding-x = 8
+window-padding-y = 4
+window-decoration = auto
+macos-titlebar-style = transparent
+window-save-state = always
+confirm-close-surface = false
+
+# Cursor
+cursor-style = bar
+cursor-style-blink = false
+shell-integration-features = cursor,sudo,title
+
+# Clipboard & selection
+copy-on-select = clipboard
+clipboard-paste-protection = false
+
+# Mouse
+mouse-scroll-multiplier = 3
+
+# Keybindings — VSCode-like
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+keybind = super+shift+left_bracket=previous_tab
+keybind = super+shift+right_bracket=next_tab
+keybind = super+d=new_split:right
+keybind = super+shift+d=new_split:down
+keybind = super+k=clear_screen
+keybind = super+backspace=text:\x15
+
+# Cmd+Arrow → Home/End (line start/end)
+keybind = super+left=text:\x1bOH
+keybind = super+right=text:\x1bOF
+# Cmd+Shift+Arrow → Select to line start/end
+keybind = super+shift+left=text:\x1b[1;4H
+keybind = super+shift+right=text:\x1b[1;4F
+# Cmd+Up/Down → Top/Bottom of file
+keybind = super+up=text:\x1b[1;5A
+keybind = super+down=text:\x1b[1;5B
+
+# Quick tab switching
+keybind = super+one=goto_tab:1
+keybind = super+two=goto_tab:2
+keybind = super+three=goto_tab:3
+keybind = super+four=goto_tab:4
+keybind = super+five=goto_tab:5
+
+# Terminal
+term = xterm-ghostty
+
+# Misc
+scrollback-limit = 100000
