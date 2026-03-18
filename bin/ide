@@ -68,7 +68,13 @@ if [[ -n "$BRANCH" ]]; then
         echo "Reusing worktree: $WORKTREE_PATH"
     else
         mkdir -p "$(dirname "$WORKTREE_PATH")"
-        git -C "$REPO_ROOT" worktree add "$WORKTREE_PATH" "$BRANCH"
+        # Create worktree — use existing branch, or create a new one
+        if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH" \
+            || git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+            git -C "$REPO_ROOT" worktree add "$WORKTREE_PATH" "$BRANCH"
+        else
+            git -C "$REPO_ROOT" worktree add -b "$BRANCH" "$WORKTREE_PATH"
+        fi
     fi
 
     TARGET="$WORKTREE_PATH"
