@@ -1,19 +1,82 @@
 #!/usr/bin/env bash
 # ide — Launch IDE layout in tmux
 # Usage: ide [path]
+#        ide -b <branch> [path]
+#        ide -rm <branch> [path]
 #
 # Opens a tmux session with the IDE layout:
-#   Right 60%: Claude Code
-#   Left  40%, top 70%: helix
-#   Left  40%, bottom 30%: terminal
+#   Right 53%: Claude Code
+#   Left  47%, top 70%: helix
+#   Left  47%, bottom 30%: terminal
 #
 # If already in tmux, creates a new window with the layout.
 # If outside tmux, creates/attaches a named session.
+#
+# Options:
+#   -b <branch>   Open IDE in a git worktree for <branch>
+#   -rm <branch>  Remove a worktree created by ide -b
 
 set -euo pipefail
 
-TARGET="${1:-.}"
+WORKTREE_BASE="$HOME/.local/share/worktrees"
+BRANCH=""
+REMOVE_BRANCH=""
+TARGET_ARG=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -b)  BRANCH="${2:?'ide -b requires a branch name'}"; shift 2 ;;
+        -rm) REMOVE_BRANCH="${2:?'ide -rm requires a branch name'}"; shift 2 ;;
+        *)   TARGET_ARG="$1"; shift ;;
+    esac
+done
+
+TARGET="${TARGET_ARG:-.}"
 TARGET="$(cd "$TARGET" 2>/dev/null && pwd || echo "$TARGET")"
+
+resolve_repo() {
+    REPO_ROOT="$(git -C "$TARGET" rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "error: not a git repository: $TARGET" >&2
+        exit 1
+    }
+    REPO_NAME="$(basename "$REPO_ROOT")"
+}
+
+# Sanitize branch name for use as directory name (feature/foo → feature-foo)
+safe_branch() {
+    echo "${1//\//-}"
+}
+
+# --- Remove worktree ---
+if [[ -n "$REMOVE_BRANCH" ]]; then
+    resolve_repo
+    WORKTREE_PATH="$WORKTREE_BASE/$REPO_NAME/$(safe_branch "$REMOVE_BRANCH")"
+    git -C "$REPO_ROOT" worktree remove "$WORKTREE_PATH" || {
+        echo "error: could not remove worktree ($WORKTREE_PATH)" >&2
+        exit 1
+    }
+    echo "Removed worktree for $REMOVE_BRANCH"
+    exit 0
+fi
+
+# --- Set up worktree if -b given ---
+if [[ -n "$BRANCH" ]]; then
+    resolve_repo
+    WORKTREE_PATH="$WORKTREE_BASE/$REPO_NAME/$(safe_branch "$BRANCH")"
+
+    if [[ -d "$WORKTREE_PATH" ]]; then
+        echo "Reusing worktree: $WORKTREE_PATH"
+    else
+        mkdir -p "$(dirname "$WORKTREE_PATH")"
+        git -C "$REPO_ROOT" worktree add "$WORKTREE_PATH" "$BRANCH"
+    fi
+
+    TARGET="$WORKTREE_PATH"
+    WINDOW_LABEL="$REPO_NAME:$(safe_branch "$BRANCH")"
+else
+    WINDOW_LABEL="ide:$(basename "$TARGET")"
+fi
+
 SESSION_NAME="ide-$(basename "$TARGET")"
 
 # Sanitize session name (tmux doesn't allow dots/colons)
@@ -27,8 +90,8 @@ launch_layout() {
     # Start helix in pane 1
     tmux send-keys -t "$window" "cd '$target' && hx ." Enter
 
-    # Split right 60% for Claude Code
-    tmux split-window -h -t "$window" -l 60% -c "$target"
+    # Split right 53% for Claude Code
+    tmux split-window -h -t "$window" -l 53% -c "$target"
     tmux send-keys -t "$window.2" "cd '$target' && claude" Enter
 
     # Split the left pane (pane 1) vertically — bottom 30% for terminal
@@ -41,7 +104,7 @@ launch_layout() {
 
 if [ -n "${TMUX:-}" ]; then
     # Already inside tmux — create a new window with the layout
-    WINDOW=$(tmux new-window -n "ide:$(basename "$TARGET")" -c "$TARGET" -P -F "#{window_id}")
+    WINDOW=$(tmux new-window -n "$WINDOW_LABEL" -c "$TARGET" -P -F "#{window_id}")
     launch_layout "$TARGET" "$WINDOW"
 else
     # Outside tmux — create or attach to session
@@ -50,7 +113,7 @@ else
         exit 0
     fi
 
-    tmux new-session -d -s "$SESSION_NAME" -n "ide:$(basename "$TARGET")" -c "$TARGET"
+    tmux new-session -d -s "$SESSION_NAME" -n "$WINDOW_LABEL" -c "$TARGET"
     launch_layout "$TARGET" "$SESSION_NAME:1"
     tmux attach-session -t "$SESSION_NAME"
 fi
