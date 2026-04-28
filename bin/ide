@@ -35,10 +35,14 @@ TARGET="${TARGET_ARG:-.}"
 TARGET="$(cd "$TARGET" 2>/dev/null && pwd || echo "$TARGET")"
 
 resolve_repo() {
-    REPO_ROOT="$(git -C "$TARGET" rev-parse --show-toplevel 2>/dev/null)" || {
+    local git_common_dir
+    git_common_dir="$(git -C "$TARGET" rev-parse --git-common-dir 2>/dev/null)" || {
         echo "error: not a git repository: $TARGET" >&2
         exit 1
     }
+    # --git-common-dir returns the .git dir of the main repo (e.g. /path/to/repo/.git)
+    # Strip the trailing /.git to get the actual repo root
+    REPO_ROOT="$(cd "$TARGET" && cd "$git_common_dir/.." && pwd)"
     REPO_NAME="$(basename "$REPO_ROOT")"
 }
 
@@ -73,14 +77,14 @@ if [[ -n "$BRANCH" ]]; then
             || git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
             git -C "$REPO_ROOT" worktree add "$WORKTREE_PATH" "$BRANCH"
         else
-            git -C "$REPO_ROOT" worktree add -b "$BRANCH" "$WORKTREE_PATH"
+            git -C "$REPO_ROOT" worktree add -b "$BRANCH" "$WORKTREE_PATH" main
         fi
     fi
 
     TARGET="$WORKTREE_PATH"
     WINDOW_LABEL="$REPO_NAME:$(safe_branch "$BRANCH")"
 else
-    WINDOW_LABEL="ide:$(basename "$TARGET")"
+    WINDOW_LABEL="$(basename "$TARGET")"
 fi
 
 SESSION_NAME="ide-$(basename "$TARGET")"
@@ -102,11 +106,13 @@ launch_layout() {
 
     # Split the left pane (pane 1) vertically — bottom 30% for terminal
     tmux split-window -v -t "$window.1" -l 30% -c "$target"
-    tmux send-keys -t "$window.3" "cd '$target'" Enter
 
     # Focus the Claude Code pane (rightmost)
     tmux select-pane -t "$window.2"
 }
+
+# Set terminal tab title to just the folder name
+printf '\033]0;%s\007' "$WINDOW_LABEL"
 
 if [ -n "${TMUX:-}" ]; then
     # Already inside tmux — create a new window with the layout
