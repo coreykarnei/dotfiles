@@ -21,6 +21,7 @@ This symlinks all config files into `~/.config/` (and `bin/ide` into `~/.local/b
 - `helix/config.toml` — Helix editor config (relative line numbers, LSP inlay hints, vi-like bindings)
 - `helix/themes/` — Custom Catppuccin Mocha variant with transparent background
 - `tmux/tmux.conf` — tmux config (Ctrl-a prefix, vi copy mode, Alt+arrow pane nav, Catppuccin status bar)
+- `claude/` — Claude Code hooks fragment (manually merged into `~/.claude/settings.json`, NOT symlinked by `install.sh`). See `claude/README.md`.
 
 ## Key Conventions
 

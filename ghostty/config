@@ -63,5 +63,8 @@ keybind = super+five=goto_tab:5
 # Terminal
 term = xterm-ghostty
 
+# Bell — tab attention indicator + title marker (no system notif, no extra audio)
+bell-features = attention,title,no-system,no-audio,no-border
+
 # Misc
 scrollback-limit = 100000
