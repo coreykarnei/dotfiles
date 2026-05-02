@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# ide-pi — Open IDE layout on the Pi over SSH
+# Usage: ide-pi [path]  (defaults to ~/jarvis)
+set -euo pipefail
+
+PI_HOST="${IDE_PI_HOST:-jarvis}"
+TARGET="${1:-/home/coreclaw/jarvis}"
+
+ssh -t "$PI_HOST" "ide '$TARGET'"
