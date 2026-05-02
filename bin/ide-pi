@@ -6,4 +6,4 @@ set -euo pipefail
 PI_HOST="${IDE_PI_HOST:-jarvis}"
 TARGET="${1:-/home/coreclaw/jarvis}"
 
-ssh -t "$PI_HOST" "ide '$TARGET'"
+ssh -t "$PI_HOST" "\$HOME/.local/bin/ide '$TARGET'"
