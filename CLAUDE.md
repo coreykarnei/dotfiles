@@ -17,6 +17,7 @@ This symlinks all config files into `~/.config/` (and `bin/ide` into `~/.local/b
 ## Structure
 
 - `bin/ide` — Bash script that creates a tmux IDE layout: Helix (top-left 40%), terminal (bottom-left 40%), Claude Code (right 60%). Usage: `ide [path]`
+- `bin/keepawake` — macOS sleep toggle. Combines `caffeinate -dimsu` + `sudo pmset -a disablesleep 1` so the Mac stays awake even with the lid closed (no external display needed). Usage: `keepawake [on|off|toggle|status]`. Useful for keeping a Claude Code Remote Control session reachable while away from the laptop.
 - `ghostty/config` — Ghostty terminal config (JetBrains Mono, transparency, VSCode-like keybindings)
 - `helix/config.toml` — Helix editor config (relative line numbers, LSP inlay hints, vi-like bindings)
 - `helix/themes/` — Custom Catppuccin Mocha variant with transparent background

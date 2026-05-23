@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# keepawake — toggle macOS sleep prevention (caffeinate + lid-close sleep)
+#
+# Usage:
+#   keepawake          toggle on/off
+#   keepawake on       force on
+#   keepawake off      force off
+#   keepawake status   print current state
+#
+# "On" means: caffeinate is running AND lid-close sleep is disabled,
+# so the Mac stays awake even with the lid shut (no external display needed).
+# Requires sudo for the pmset call.
+
+set -euo pipefail
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "keepawake: macOS only" >&2
+    exit 1
+fi
+
+is_caffeinated()        { pgrep -x caffeinate >/dev/null 2>&1; }
+is_lid_sleep_disabled() { pmset -g | grep -qE 'SleepDisabled[[:space:]]+1'; }
+
+turn_on() {
+    if ! is_caffeinated; then
+        nohup caffeinate -dimsu >/dev/null 2>&1 &
+        disown
+    fi
+    if ! is_lid_sleep_disabled; then
+        sudo pmset -a disablesleep 1
+    fi
+    echo "keepawake: ON  — Mac will stay awake (lid-close sleep disabled)"
+}
+
+turn_off() {
+    if is_caffeinated; then
+        pkill -x caffeinate || true
+    fi
+    if is_lid_sleep_disabled; then
+        sudo pmset -a disablesleep 0
+    fi
+    echo "keepawake: OFF — normal sleep behavior restored"
+}
+
+status() {
+    local caf="off" lid="enabled"
+    is_caffeinated && caf="running"
+    is_lid_sleep_disabled && lid="disabled"
+    echo "caffeinate:       $caf"
+    echo "lid-close sleep:  $lid"
+}
+
+case "${1:-toggle}" in
+    on)            turn_on ;;
+    off)           turn_off ;;
+    status)        status ;;
+    toggle|"")
+        if is_caffeinated || is_lid_sleep_disabled; then
+            turn_off
+        else
+            turn_on
+        fi
+        ;;
+    *) echo "usage: keepawake [on|off|toggle|status]" >&2; exit 1 ;;
+esac

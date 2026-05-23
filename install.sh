@@ -28,6 +28,7 @@ link "$DOTFILES/bin/ide"                                 "$HOME/.local/bin/ide"
 if [ "$OS" = "Darwin" ]; then
     link "$DOTFILES/ghostty/config"                      "$HOME/.config/ghostty/config"
     link "$DOTFILES/bin/ide-pi"                          "$HOME/.local/bin/ide-pi"
+    link "$DOTFILES/bin/keepawake"                       "$HOME/.local/bin/keepawake"
 fi
 
 echo "Done."
