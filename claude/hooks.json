@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Blow.aiff & printf '\\a' > /dev/tty 2>/dev/null; true"
+            "command": "[ -n \"$ATELIER_TAB\" ] || { afplay /System/Library/Sounds/Blow.aiff & printf '\\a' > /dev/tty 2>/dev/null; }; true"
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Tink.aiff & printf '\\a' > /dev/tty 2>/dev/null; true"
+            "command": "[ -n \"$ATELIER_TAB\" ] || { afplay /System/Library/Sounds/Tink.aiff & printf '\\a' > /dev/tty 2>/dev/null; }; true"
           }
         ]
       }
